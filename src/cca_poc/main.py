@@ -1,6 +1,8 @@
+import os
 import base64
 import gc
 import json
+from openai import OpenAI
 import logging
 import hashlib
 import uvicorn
@@ -15,8 +17,21 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# --- Dynamic LLM Configuration ---
+# By defaulting to the enclave settings, the code is secure out-of-the-box.
+# Local developers simply override these variables in their terminal or .env file.
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://llm-engine:11434/v1")
+LLM_API_KEY = os.getenv("LLM_API_KEY", "ollama-dummy-key")
+LLM_MODEL = os.getenv("LLM_MODEL", "phi3")
+
 app = FastAPI()
 client = DstackClient()
+
+# Initialize the universal client
+llm_client = OpenAI(
+    base_url=LLM_BASE_URL,
+    api_key=LLM_API_KEY,
+)
 
 
 # --- Pydantic Models ---
@@ -106,29 +121,34 @@ def audit_and_wipe(payload: EncryptedPayload):
             detail="Decryption failed. Unauthorized TEE access?"
         )
 
-    # --- Step 3: Confidential Analysis (Stateless LLM Call) ---
+    # --- Step 3: REAL Confidential Analysis (Universal LLM) ---
+    logger.info(f"🧠 Routing inference to {LLM_BASE_URL} using model {LLM_MODEL}...")
+
     # The 'messages' array represents the LLM context for this single request.
     messages = [
         {"role": "system", "content": IMMUTABLE_SYSTEM_PROMPT},
         {"role": "user", "content": decrypted_text}
     ]
 
-    # MOCK LLM LOGIC: Simulating adherence to the JSON prompt rules
-    if "proprietary" in decrypted_text.lower():
-        llm_response_dict = {
-            "verdict": "NON-COMPLIANT",
-            "remediation_report": (
-                """
-                Proprietary business logic or trade secrets were detected.
-                Please sanitize the document to contain only standard open-source terms.
-                """
-            )
-        }
-    else:
-        llm_response_dict = {
-            "verdict": "COMPLIANT",
-            "remediation_report": "No issues found."
-        }
+    try:
+        # This exact call works for both OpenAI (GPT-4) and Ollama (Phi-3)
+        response = llm_client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=messages,
+            response_format={"type": "json_object"}, # Forces structured JSON output
+        )
+        
+        raw_llm_json_string = response.choices[0].message.content
+        llm_response_dict = json.loads(raw_llm_json_string)
+    
+    except Exception as e:
+        logger.error(f"LLM Inference failed: {e}")
+        # Trigger Pill X early on failure
+        for i in range(len(mutable_secret)): mutable_secret[i] = 0
+        del raw_decrypted_bytes
+        del decrypted_text
+        gc.collect()
+        raise HTTPException(status_code=500, detail="Confidential inference engine failed.")
 
     # --- Step 4: True 'Pill X' Memory Wipe ---
     # 1. Cryptographically overwrite sensitive data structures with zeros
@@ -139,12 +159,12 @@ def audit_and_wipe(payload: EncryptedPayload):
     del raw_decrypted_bytes
     del decrypted_text
     del messages
-
+    del raw_llm_json_string # Wipe the raw LLM output string too!
     # 3. Force garbage collection to sweep the RAM immediately
     gc.collect()
 
     logger.info(
-        "[Pill X] Context cleared. LLM memory wiped. Ready for next stateless request."
+        "[Pill X] Context cleared. LLM memory wiped."
     )
 
     # --- Step 5: Cryptographic Certification ---
