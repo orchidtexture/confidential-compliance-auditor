@@ -23,6 +23,16 @@ Built on top of the **Dstack SDK** and designed for Trusted Execution Environmen
 
 ### 1. Start the CCA Auditor Server
 
+Setup the environmental variables
+
+```bash
+export LLM_BASE_URL="https://example.com/v1"
+export LLM_API_KEY="sk-proj-some-key"
+export LLM_MODEL="gpt-5-"
+```
+
+_For the TEE environment this variables should be hardcoded on the `docker-compose.yml`_
+
 To run the auditor locally (our code automatically detects if it's in a real TEE or local dev mode):
 
 ```bash
