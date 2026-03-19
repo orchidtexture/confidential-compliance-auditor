@@ -1,0 +1,24 @@
+[project]
+name = "cca-poc"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Luis Guzman",email = "luisdaniel.guzmanp@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dstack-sdk (>=0.5.3,<0.6.0)",
+    "fastapi (>=0.135.1,<0.136.0)",
+    "uvicorn (>=0.42.0,<0.43.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "pytest (>=9.0.2,<10.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "cca_poc", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv
+env/
+venv/
+ENV/
+.venv/
+# mypy
+.mypy_cache/
+.dmypy.json
+# pytest
+.cache/
+.pytest_cache/
+# pipenv
+Pipfile.lock
+# poetry
+poetry.lock
+# virtualenv
+.venv/
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+# distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+.venv
+# C extensions
+*.so
+# PyInstaller
+*.manifest
+*.spec
+# types
+*.pyi
+# coverage
+.coverage
+coverage.xml
+htmlcov/
+*.cover
+*.gcov
+# PyCharm
+.idea/
+# VS Code
+.vscode/
+# Sphinx
+docs/_build/
+# FastAPI / Uvicorn
+*.log
+*.out
+*.err
+uvicorn.log
+# dotenv
+.env
+.env.*
+# local settings
+local_settings.py
