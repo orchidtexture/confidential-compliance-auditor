@@ -1,0 +1,6 @@
+dstack-sdk
+fastapi
+uvicorn
+httpx
+pytest
+openai

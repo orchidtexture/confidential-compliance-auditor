@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 # --- Dynamic LLM Configuration ---
 # By defaulting to the enclave settings, the code is secure out-of-the-box.
 # Local developers simply override these variables in their terminal or .env file.
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://llm-engine:11434/v1")
-LLM_API_KEY = os.getenv("LLM_API_KEY", "ollama-dummy-key")
-LLM_MODEL = os.getenv("LLM_MODEL", "phi3")
+LLM_BASE_URL = os.getenv("LLM_BASE_URL")
+LLM_API_KEY = os.getenv("LLM_API_KEY")
+LLM_MODEL = os.getenv("LLM_MODEL")
 
 app = FastAPI()
 client = DstackClient()
@@ -78,6 +78,11 @@ def get_auditor_keys():
     seed_bytes = bytes.fromhex(seed.key) if isinstance(seed.key, str) else seed.key
     priv = x25519.X25519PrivateKey.from_private_bytes(seed_bytes)
     return priv
+
+
+@app.get("/ping")
+def ping():
+    return {"status": "The network is alive and routing perfectly!"}
 
 
 @app.get("/handshake")
@@ -137,6 +142,9 @@ def audit_and_wipe(payload: EncryptedPayload):
             messages=messages,
             response_format={"type": "json_object"}, # Forces structured JSON output
         )
+
+        # TODO: when using Phala confidential AI, add proof verification logic
+        # https://docs.phala.com/phala-cloud/confidential-ai/confidential-model/confidential-ai-api#verify-your-ai-is-running-securely
         
         raw_llm_json_string = response.choices[0].message.content
         llm_response_dict = json.loads(raw_llm_json_string)

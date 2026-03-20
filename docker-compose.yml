@@ -1,0 +1,14 @@
+services:
+  cca-auditor:
+    image: luisdanielgp/cca-poc:v4
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/dstack.sock:/var/run/dstack.sock
+    environment:
+      # Point to Phala's Private AI endpoint
+      - LLM_BASE_URL=https://api.redpill.ai/v1
+      # Select a model they host (e.g., llama3 or whatever you prefer)
+      - LLM_MODEL=openai/gpt-oss-20b
+      # Dstack will securely inject this from your encrypted vault
+      - LLM_API_KEY=${LLM_API_KEY}
